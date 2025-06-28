@@ -1,0 +1,14 @@
+    - name: Сжимаем логи journald
+      ansible.builtin.command:
+        cmd: journalctl --vacuum-size 500M
+      changed_when: true
+
+    - name: Переносим логи из /run/log в /var/log
+      ansible.builtin.command:
+        cmd: journalctl --flush
+      changed_when: true
+
+    - name: Restart journald
+      ansible.builtin.systemd:
+        name: systemd-journald
+        state: restarted
