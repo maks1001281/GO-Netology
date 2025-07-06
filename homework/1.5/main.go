@@ -3,37 +3,113 @@ package main
 import (
         "errors"
         "fmt"
+        "io"
         "os"
+        "strings"
 )
 
-func main() {
-        content := ReadProcessWrite()
-        process(content)
-}
-
-//Читаем файл, обрабатываем ошибки
-func ReadProcessWrite() string {
-        content, err := os.ReadFile("file/task.yaml")
+func ReadProcessWrite(
+        inputPath string,
+        outputPath string,
+        process func(string) (string, error),
+) error {
+        // Открываем входной файл
+        inputFile, err := os.Open(inputPath)
         if err != nil {
-                if errors.Is(err, os.ErrNotExist) {
-                        panic("Файл не найден!")
-                } else if errors.Is(err, os.ErrPermission) {
-                        panic("Ошибка доступа")
-                } else if errors.Is(err, os.ErrInvalid) {
-                        panic("Файл не текстовый")
-                } else if errors.Is(err, os.ErrDeadlineExceeded) {
-                        panic("Время ожидания истекло")
-                }
+          if errors.Is(err, os.ErrNotExist) {
+            return fmt.Errorf("файл не найден:%w", err)
+          }
+          if errors.Is(err, os.ErrPermission) {
+            return fmt.Errorf("ошибка доступа:%w", err)
+          }
+          if errors.Is(err, os.ErrInvalid) {
+            return fmt.Errorf("некорректные данные:%w", err)
+          }
+          if errors.Is(err, os.ErrDeadlineExceeded) {
+            return fmt.Errorf("время ожидания открытия файло истекло:%w", err)
+          }
         }
-        fmt.Println("Содержимое:\n", string(content))
-        return string(content)
+        defer inputFile.Close()
+
+        // Читаем содержимое файла
+        inputData, err := io.ReadAll(inputFile)
+        if err != nil {
+          if errors.Is(err, os.ErrNotExist) {
+            return fmt.Errorf("файл не найден:%w", err)
+          }
+          if errors.Is(err, os.ErrPermission) {
+            return fmt.Errorf("ошибка доступа:%w", err)
+          }
+          if errors.Is(err, os.ErrInvalid) {
+            return fmt.Errorf("некорректные данные:%w", err)
+          }
+          if errors.Is(err, os.ErrDeadlineExceeded) {
+            return fmt.Errorf("время ожидания открытия файло истекло:%w", err)
+          }
+        }
+
+        // Обрабатываем данные
+        processedData, err := process(string(inputData))
+        if err != nil {
+          if errors.Is(err, os.ErrNotExist) {
+            return fmt.Errorf("файл не найден:%w", err)
+          }
+          if errors.Is(err, os.ErrPermission) {
+            return fmt.Errorf("ошибка доступа:%w", err)
+          }
+          if errors.Is(err, os.ErrInvalid) {
+            return fmt.Errorf("некорректные данные:%w", err)
+          }
+          if errors.Is(err, os.ErrDeadlineExceeded) {
+            return fmt.Errorf("время ожидания открытия файло истекло:%w", err)
+          }
+        }
+
+        // Создаем/перезаписываем выходной файл
+        outputFile, err := os.Create(outputPath)
+        if err != nil {
+          if errors.Is(err, os.ErrNotExist) {
+            return fmt.Errorf("файл не найден:%w", err)
+          }
+          if errors.Is(err, os.ErrPermission) {
+            return fmt.Errorf("ошибка доступа:%w", err)
+          }
+          if errors.Is(err, os.ErrInvalid) {
+            return fmt.Errorf("некорректные данные:%w", err)
+          }
+          if errors.Is(err, os.ErrDeadlineExceeded) {
+            return fmt.Errorf("время ожидания открытия файло истекло:%w", err)
+          }
+        }
+        defer outputFile.Close()
+
+        // Записываем результат
+        _, err = outputFile.WriteString(processedData)
+        if err != nil {
+          if errors.Is(err, os.ErrNotExist) {
+            return fmt.Errorf("файл не найден:%w", err)
+          }
+          if errors.Is(err, os.ErrPermission) {
+            return fmt.Errorf("ошибка доступа:%w", err)
+          }
+          if errors.Is(err, os.ErrInvalid) {
+            return fmt.Errorf("некорректные данные:%w", err)
+          }
+          if errors.Is(err, os.ErrDeadlineExceeded) {
+            return fmt.Errorf("время ожидания открытия файло истекло:%w", err)
+          }
+        }
+
+        return nil
 }
 
-//Создаем файл если его нет и записывает input с ReadProcessWrite в taskoutput.yaml
-func process(content string) {
-        if err := os.WriteFile("file/taskoutput.yaml", []byte(content), 0644); err != nil {
-                if errors.Is(err, os.ErrPermission) {
-                        fmt.Println("Ошибка доступа:")
-                }
-        }
+func ToUpper(inputData string) (string, error) {
+        return strings.ToUpper(inputData), nil
+}
+
+func main() {
+        var inputPath string = "file/task.yaml"
+        var outputPath string = "file/taskoutput.yaml"
+        var oshibka =  ReadProcessWrite(inputPath, outputPath, ToUpper)
+        fmt.Print(oshibka)
 }
